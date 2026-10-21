@@ -1,6 +1,7 @@
 package com.example.mpazpanol.ui.viewmodel
 
 import android.content.Context
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,65 +13,82 @@ import com.example.mpazpanol.model.RegisterModel
 import kotlinx.coroutines.launch
 
 class RegisterViewModel : ViewModel() {
+
     var uiState by mutableStateOf(RegisterModel())
         private set
-    fun onNameChanged(name: String) { uiState = uiState.copy(name = name, errorMessage = null) }
-    fun onEmailChanged(email: String) { uiState = uiState.copy(email = email, errorMessage = null) }
-    fun onPasswordChanged(password: String) { uiState = uiState.copy(password = password, errorMessage = null) }
-    fun onConfirmPasswordChanged(confirmPassword: String) { uiState = uiState.copy(confirmPassword = confirmPassword, errorMessage = null) }
+
+
+    fun onNameChanged(name: String) {
+        uiState = uiState.copy(name = name, nameError = null)
+    }
+
+    fun onEmailChanged(email: String) {
+        uiState = uiState.copy(email = email, emailError = null)
+    }
+
+    fun onPasswordChanged(password: String) {
+        uiState = uiState.copy(password = password, passwordError = null, confirmPasswordError = null)
+    }
+
+    fun onConfirmPasswordChanged(confirmPassword: String) {
+        uiState = uiState.copy(confirmPassword = confirmPassword, confirmPasswordError = null)
+    }
+
+
+    private fun validar(state: RegisterModel): RegisterModel {
+        return state.copy(
+            nameError = when {
+                state.name.isBlank() -> "Debes ingresar tu nombre."
+                state.name.trim().length < 3 -> "El nombre debe tener al menos 3 caracteres."
+                else -> null
+            },
+            emailError = when {
+                state.email.isBlank() -> "Debes ingresar tu correo electrónico."
+                !Patterns.EMAIL_ADDRESS.matcher(state.email.trim()).matches() ->
+                    "Ingresa un correo válido. Ej: nombre@correo.com"
+                else -> null
+            },
+            passwordError = when {
+                state.password.isBlank() -> "Debes ingresar una contraseña."
+                state.password.length < 6 -> "La contraseña debe tener al menos 6 caracteres."
+                state.password.none { it.isDigit() } -> "La contraseña debe incluir al menos un número."
+                else -> null
+            },
+            confirmPasswordError = when {
+                state.confirmPassword.isBlank() -> "Debes confirmar tu contraseña."
+                state.password != state.confirmPassword -> "Las contraseñas no coinciden."
+                else -> null
+            }
+        )
+    }
+
+    private fun tieneErrores(s: RegisterModel): Boolean =
+        s.nameError != null || s.emailError != null ||
+                s.passwordError != null || s.confirmPasswordError != null
+
 
     fun onRegisterClick(context: Context, onSuccess: () -> Unit) {
-        val state = uiState
+        val validado = validar(uiState)
 
-
-        if (state.name.isBlank()) {
-            uiState = uiState.copy(
-                errorMessage = "Debes ingresar tu nombre."
-            )
+        if (tieneErrores(validado)) {
+            uiState = validado
             return
         }
-
-        if (state.email.isBlank()) {
-            uiState = uiState.copy(
-                errorMessage = "Debes ingresar tu correo electrónico."
-            )
-            return
-        }
-
-        if (state.password.isBlank()) {
-            uiState = uiState.copy(
-                errorMessage = "Debes ingresar una contraseña."
-            )
-            return
-        }
-
-        if (state.confirmPassword.isBlank()) {
-            uiState = uiState.copy(
-                errorMessage = "Debes confirmar tu contraseña."
-            )
-            return
-        }
-
-        if (state.password != state.confirmPassword) {
-            uiState = uiState.copy(errorMessage = "Las contraseñas no coinciden.")
-            return
-        }
-
 
         viewModelScope.launch {
             val db = AppDatabase.getDatabase(context)
-            val existingUser = db.usuarioDao().getUserByEmail(state.email)
+            val existente = db.usuarioDao().getUserByEmail(validado.email.trim())
 
-            if (existingUser != null) {
-                uiState = uiState.copy(errorMessage = "El correo ya está registrado.")
+            if (existente != null) {
+                uiState = validado.copy(emailError = "El correo ya está registrado.")
             } else {
-                val newUser = UsuarioEntity(
-                    name = state.name,
-                    email = state.email,
-                    password = state.password
+                db.usuarioDao().registerUser(
+                    UsuarioEntity(
+                        name = validado.name.trim(),
+                        email = validado.email.trim(),
+                        password = validado.password
+                    )
                 )
-                db.usuarioDao().registerUser(newUser)
-                uiState = uiState.copy(errorMessage = null)
                 onSuccess()
             }
         }
