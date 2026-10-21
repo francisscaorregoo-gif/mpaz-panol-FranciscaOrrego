@@ -1,4 +1,4 @@
-# MPAZ Pañol Francisca Orreg9i
+# MPAZ Pañol Francisca Orrego Muñoz
 
 Aplicación móvil para gestionar el inventario, los préstamos y las devoluciones de equipos tecnológicos de un pañol.
 
@@ -104,7 +104,3 @@ Los mockups de las pantallas están en la carpeta [`mockups/`](mockups/).
 - **Tablero de Trello:** https://trello.com/b/1FrvvLsv/mpaz-pa%C3%B1ol
 - **Flujo de Git:** se usa GitHub Flow. La rama `main` se mantiene estable y cada tarea se desarrolla en su propia rama (`feature/...`), se revisa mediante Pull Request y luego se une a `main`.
 
-## Mejoras futuras
-- Guardar el inventario en la base de datos y descontar las unidades al prestar.
-- Mostrar también los préstamos en el historial.
-- Encriptar las contraseñas almacenadas.ne estable y cada tarea se desarrolla en su propia rama (`feature/...`) y se une mediante Pull Request.
