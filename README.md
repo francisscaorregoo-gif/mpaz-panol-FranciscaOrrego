@@ -101,7 +101,7 @@ Kotlin · Jetpack Compose · Material 3 · Navigation Compose · Room · ViewMod
 Los mockups de las pantallas están en la carpeta [`mockups/`](mockups/).
 
 ## Planificación y trabajo en equipo
-- **Tablero de Trello:** [enlace al tablero]
+- **Tablero de Trello:** https://trello.com/b/1FrvvLsv/mpaz-pa%C3%B1ol
 - **Flujo de Git:** se usa GitHub Flow. La rama `main` se mantiene estable y cada tarea se desarrolla en su propia rama (`feature/...`), se revisa mediante Pull Request y luego se une a `main`.
 
 ## Mejoras futuras
