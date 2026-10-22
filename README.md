@@ -24,20 +24,20 @@ Muestra el logo con una animación de flotación y el botón **Ingresar**, que l
 Es el centro de la app. Incluye un **indicador del nivel de batería** del dispositivo (recurso nativo) que avisa cuando está bajo el 20 % y recomienda cargar el equipo antes de solicitar material. Desde aquí se entra a las cuatro secciones.
 
 ### 4. Inventario
-Lista los materiales del pañol con las unidades disponibles:
+Lista los materiales del pañol con sus cantidades iniciales de referencia:
 
-| Material | Disponibles |
-|---|---|
-| Proyector | 3 |
-| Notebook | 5 |
-| Cable HDMI | 8 |
-| Parlante | 4 |
-| Control remoto | 6 |
+| Material | Cant Inicial |
+|---|--------------|
+| Proyector | 3            |
+| Notebook | 5            |
+| Cable HDMI | 8            |
+| Parlante | 4            |
+| Control remoto | 6            |
 
 ### 5. Préstamos
 Formulario para solicitar material con tres campos: **material, cantidad y sala**. Reglas de negocio:
 - El material debe existir en el inventario (no distingue mayúsculas).
-- La cantidad debe ser mayor a 0 y no puede superar las unidades disponibles de ese material.
+- La cantidad debe ser mayor a 0 y no superar el límite por solicitud definido para ese material. Esta validación no considera préstamos anteriores.
 - Todos los campos son obligatorios.
 
 Cada campo muestra su propio ícono y mensaje de error. Al registrar un préstamo, la app **vibra** (recurso nativo), el mensaje de confirmación se anima y el préstamo se guarda en la base de datos local. Un contador muestra cuántos préstamos hay registrados.
@@ -103,3 +103,35 @@ Los mockups de las pantallas están en la carpeta [`mockups/`](mockups/).
 ## Planificación y trabajo en equipo
 - **Tablero de Trello:** https://trello.com/b/1FrvvLsv/mpaz-pa%C3%B1ol
 - **Flujo de Git:** se usa GitHub Flow. La rama `main` se mantiene estable y cada tarea se desarrolla en su propia rama (`feature/...`), se revisa mediante Pull Request y luego se une a `main`.
+
+## Cómo ejecutar la aplicación
+
+1. Descargar el proyecto y descomprimirlo.
+2. Abrir Android Studio y seleccionar Open.
+3. Seleccionar la carpeta del proyecto que contiene app,
+   settings.gradle.kts y gradlew.
+4. Esperar a que termine la sincronización de Gradle.
+   La primera sincronización requiere conexión a internet.
+5. Tener instalado el SDK Android 37, utilizado por el proyecto.
+   La configuración de Gradle del proyecto declara JDK 25.
+6. Seleccionar un emulador o un celular con Android 8.0
+   (API 26) o superior.
+7. Ejecutar la configuración app con el botón Run.
+8. En la aplicación, ingresar a Registro y crear una cuenta.
+9. Iniciar sesión con el correo y la contraseña registrados.
+
+Para comprobar la vibración, utilizar un dispositivo que
+cuente con vibrador.
+
+## Alcance de esta versión
+
+- El inventario muestra cantidades iniciales de referencia.
+- Los préstamos se guardan y validan con un límite por solicitud.
+- Las cantidades del inventario no se descuentan automáticamente.
+- Las devoluciones se registran con su estado y observaciones,
+  pero no se vinculan automáticamente a un préstamo.
+- El historial permite consultar las devoluciones registradas.
+
+## Autoría
+
+El proyecto fue desarrollado por Francisca Orrego Muñoz.

@@ -1,7 +1,5 @@
 package com.example.mpazpanol.model
 
-val ESTADOS_DEVOLUCION = listOf("Bueno", "Dañado", "Incompleto")
-
 data class DevolucionModel(
     val material: String = "",
     val cantidad: String = "",

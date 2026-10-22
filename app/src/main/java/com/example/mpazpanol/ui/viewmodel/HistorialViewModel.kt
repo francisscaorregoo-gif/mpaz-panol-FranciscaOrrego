@@ -8,56 +8,61 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mpazpanol.data.database.AppDatabase
 import com.example.mpazpanol.data.local.entity.DevolucionEntity
-import com.example.mpazpanol.model.FILTRO_TODOS
-import com.example.mpazpanol.model.HistorialModel
 import kotlinx.coroutines.launch
 
 class HistorialViewModel : ViewModel() {
 
-    var uiState by mutableStateOf(HistorialModel())
+    var numero by mutableStateOf("")
         private set
 
-    var devoluciones by mutableStateOf<List<DevolucionEntity>>(emptyList())
+    var errorNumero by mutableStateOf<String?>(null)
         private set
 
-    private var observando = false
+    var devolucion by mutableStateOf<DevolucionEntity?>(null)
+        private set
 
-    fun observarHistorial(context: Context) {
-        if (observando) return
-        observando = true
+    var buscando by mutableStateOf(false)
+        private set
+
+    fun onNumeroChanged(texto: String) {
+        numero = texto
+        errorNumero = null
+        devolucion = null
+    }
+
+    fun buscarDevolucion(context: Context) {
+        if (buscando) return
+
+        val numeroBuscado = numero
+
+        errorNumero = null
+        devolucion = null
+
+        if (numeroBuscado.isBlank()) {
+            errorNumero = "Ingresa el número de la devolución."
+            return
+        }
+
+        buscando = true
+
         viewModelScope.launch {
-            AppDatabase.getDatabase(context).devolucionDao().obtenerDevoluciones().collect {
-                devoluciones = it
+            val db = AppDatabase.getDatabase(context)
+
+            val resultado = db.devolucionDao()
+                .buscarPorNumero(numeroBuscado)
+
+            // Evita mostrar un resultado si se cambió el campo
+            // mientras se realizaba la consulta.
+            if (numero == numeroBuscado) {
+                if (resultado != null) {
+                    devolucion = resultado
+                } else {
+                    errorNumero =
+                        "No se encontró una devolución con ese número."
+                }
             }
+
+            buscando = false
         }
     }
-
-    fun onBusquedaChanged(texto: String) {
-        // máximo 30 caracteres
-        uiState = uiState.copy(busqueda = texto.take(30))
-    }
-
-    fun onFiltroChanged(filtro: String) {
-        uiState = uiState.copy(filtroEstado = filtro)
-    }
-
-    fun limpiarFiltros() {
-        uiState = HistorialModel()
-    }
-
-    fun hayFiltrosActivos(): Boolean =
-        uiState.busqueda.isNotBlank() || uiState.filtroEstado != FILTRO_TODOS
-
-    fun devolucionesFiltradas(): List<DevolucionEntity> {
-        val texto = uiState.busqueda.trim()
-        return devoluciones.filter { d ->
-            val coincideEstado = uiState.filtroEstado == FILTRO_TODOS || d.estado == uiState.filtroEstado
-            val coincideTexto = texto.isEmpty() ||
-                    d.material.contains(texto, ignoreCase = true) ||
-                    d.sala.contains(texto, ignoreCase = true)
-            coincideEstado && coincideTexto
-        }
-    }
-
-    fun contarPorEstado(estado: String): Int = devoluciones.count { it.estado == estado }
 }

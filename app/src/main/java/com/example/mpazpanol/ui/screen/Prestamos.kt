@@ -23,12 +23,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mpazpanol.model.INVENTARIO_DISPONIBLE
 import com.example.mpazpanol.ui.components.Footer
 import com.example.mpazpanol.ui.components.Header
 import com.example.mpazpanol.ui.components.vibrar
@@ -49,14 +47,16 @@ fun Prestamos(
     val scope = rememberCoroutineScope()
 
     val transicion = rememberInfiniteTransition(label = "temblor")
+
     val desplazamiento by transicion.animateFloat(
         initialValue = -8f,
         targetValue = 8f,
-        animationSpec = infiniteRepeatable(tween(40), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(
+            tween(40),
+            RepeatMode.Reverse
+        ),
         label = "desplazamiento"
     )
-
-    LaunchedEffect(Unit) { viewModel.cargarTotal(context) }
 
     Scaffold(
         topBar = { Header(title = "PRÉSTAMOS") },
@@ -70,7 +70,6 @@ fun Prestamos(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-
             Text(
                 text = "Solicitar material",
                 fontFamily = FontFamily.Serif,
@@ -81,7 +80,8 @@ fun Prestamos(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Materiales: " + INVENTARIO_DISPONIBLE.keys.joinToString(", "),
+                text = "Materiales: Proyector, Notebook, Cable HDMI, " +
+                        "Parlante y Control remoto.",
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -89,7 +89,9 @@ fun Prestamos(
 
             CampoPrestamo(
                 value = state.material,
-                onValueChange = { viewModel.onMaterialChanged(it) },
+                onValueChange = {
+                    viewModel.onMaterialChanged(it)
+                },
                 label = "Material",
                 placeholder = "Ej: Proyector",
                 icono = Icons.Default.Build,
@@ -100,7 +102,9 @@ fun Prestamos(
 
             CampoPrestamo(
                 value = state.cantidad,
-                onValueChange = { viewModel.onCantidadChanged(it) },
+                onValueChange = {
+                    viewModel.onCantidadChanged(it)
+                },
                 label = "Cantidad",
                 placeholder = "Ej: 1",
                 icono = Icons.Default.Info,
@@ -112,7 +116,9 @@ fun Prestamos(
 
             CampoPrestamo(
                 value = state.sala,
-                onValueChange = { viewModel.onSalaChanged(it) },
+                onValueChange = {
+                    viewModel.onSalaChanged(it)
+                },
                 label = "Sala",
                 placeholder = "Ej: Sala 204",
                 icono = Icons.Default.Place,
@@ -128,18 +134,22 @@ fun Prestamos(
                         context = context,
                         onSuccess = {
                             vibrar(context, duracion)
+
                             scope.launch {
                                 vibrando = true
                                 delay(duracion)
                                 vibrando = false
                             }
                         },
-                        onError = { vibrar(context, 150) }
+                        onError = {
+                            vibrar(context, 150)
+                        }
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00BCD4))
+                    containerColor = Color(0xFF00BCD4)
+                )
             ) {
                 Text("Solicitar préstamo")
             }
@@ -150,25 +160,52 @@ fun Prestamos(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(if (vibrando) desplazamiento.roundToInt() else 0, 0) },
+                        .offset {
+                            IntOffset(
+                                if (vibrando) {
+                                    desplazamiento.roundToInt()
+                                } else {
+                                    0
+                                },
+                                0
+                            )
+                        },
                     colors = CardDefaults.cardColors(
-                        containerColor = if (vibrando) MaterialTheme.colorScheme.tertiaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = if (vibrando) {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        }
                     )
                 ) {
                     Text(
-                        text = if (vibrando) "📳 Solicitud realizada correctamente"
-                        else "Solicitud realizada correctamente",
+                        text = "Solicitud realizada correctamente",
                         modifier = Modifier.padding(16.dp)
                     )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            Text(
-                text = "Préstamos registrados: ${state.total}",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Button(
+                onClick = {
+                    viewModel.cargarTotal(context)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Consultar total de préstamos")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (viewModel.totalCargado) {
+                Text(
+                    text = "Préstamos registrados: ${state.total}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            } else {
+                Text("Presiona el botón para consultar el total.")
+            }
         }
     }
 }
@@ -186,28 +223,37 @@ private fun CampoPrestamo(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(icono, contentDescription = null) },
+        label = {
+            Text(label)
+        },
+        placeholder = {
+            Text(placeholder)
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = icono,
+                contentDescription = null
+            )
+        },
         trailingIcon = {
             if (error != null) {
                 Icon(
-                    Icons.Default.Warning,
+                    imageVector = Icons.Default.Warning,
                     contentDescription = "Error",
                     tint = MaterialTheme.colorScheme.error
                 )
             }
         },
         isError = error != null,
-        supportingText = { if (error != null) Text(error) },
+        supportingText = {
+            if (error != null) {
+                Text(error)
+            }
+        },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType
+        ),
         modifier = Modifier.fillMaxWidth()
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PrestamosPreview() {
-    Prestamos()
 }

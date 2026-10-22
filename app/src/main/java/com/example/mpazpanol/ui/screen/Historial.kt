@@ -1,45 +1,18 @@
 package com.example.mpazpanol.ui.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mpazpanol.model.ESTADOS_DEVOLUCION
-import com.example.mpazpanol.model.FILTRO_TODOS
+import com.example.mpazpanol.ui.components.CampoFormulario
 import com.example.mpazpanol.ui.components.Footer
 import com.example.mpazpanol.ui.components.Header
 import com.example.mpazpanol.ui.viewmodel.HistorialViewModel
@@ -48,126 +21,106 @@ import com.example.mpazpanol.ui.viewmodel.HistorialViewModel
 fun Historial(
     viewModel: HistorialViewModel = viewModel()
 ) {
-    val state = viewModel.uiState
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) { viewModel.observarHistorial(context) }
-
-    val filtradas = viewModel.devolucionesFiltradas()
+    val devolucion = viewModel.devolucion
 
     Scaffold(
         topBar = { Header(title = "HISTORIAL") },
         bottomBar = { Footer() }
     ) { innerPadding ->
 
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
+            Text(
+                text = "Consultar devolución",
+                style = MaterialTheme.typography.headlineSmall
+            )
 
-            item {
-                Text(
-                    text = "Historial de devoluciones",
-                    fontFamily = FontFamily.Serif,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Ingresa el número del registro que deseas consultar.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CampoFormulario(
+                value = viewModel.numero,
+                onValueChange = {
+                    viewModel.onNumeroChanged(it)
+                },
+                label = "Número de devolución",
+                icono = Icons.Default.Info,
+                error = viewModel.errorNumero,
+                placeholder = "Ej: 1",
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    viewModel.buscarDevolucion(context)
+                },
+                enabled = !viewModel.buscando,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (viewModel.buscando) {
+                    Text("Buscando...")
+                } else {
+                    Text("Buscar devolución")
+                }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
 
-            item {
+            if (devolucion != null) {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateContentSize()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceAround
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        ResumenItem("Total", viewModel.devoluciones.size)
-                        ResumenItem("Bueno", viewModel.contarPorEstado("Bueno"))
-                        ResumenItem("Dañado", viewModel.contarPorEstado("Dañado"))
-                        ResumenItem("Incompleto", viewModel.contarPorEstado("Incompleto"))
-                    }
-                }
-            }
-
-
-            item {
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    (listOf(FILTRO_TODOS) + ESTADOS_DEVOLUCION).forEach { opcion ->
-                        FilterChip(
-                            selected = state.filtroEstado == opcion,
-                            onClick = { viewModel.onFiltroChanged(opcion) },
-                            label = { Text(opcion) }
+                        Text(
+                            text = "Devolución N.º ${devolucion.id}",
+                            style = MaterialTheme.typography.titleMedium
                         )
-                    }
-                }
-            }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Resultados (${filtradas.size})",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    AnimatedVisibility(visible = viewModel.hayFiltrosActivos()) {
-                        TextButton(onClick = { viewModel.limpiarFiltros() }) {
-                            Text("Limpiar filtros")
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text("Material: ${devolucion.material}")
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text("Cantidad: ${devolucion.cantidad}")
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text("Sala: ${devolucion.sala}")
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text("Estado: ${devolucion.estado}")
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (devolucion.observaciones.isBlank()) {
+                            Text("Observaciones: sin observaciones.")
+                        } else {
+                            Text(
+                                "Observaciones: ${devolucion.observaciones}"
+                            )
                         }
                     }
                 }
             }
-
-            if (filtradas.isEmpty()) {
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, contentDescription = null)
-                        Spacer(modifier = Modifier.padding(horizontal = 6.dp))
-                        Text(
-                            text = if (viewModel.devoluciones.isEmpty())
-                                "Aún no hay devoluciones registradas."
-                            else
-                                "No hay resultados para la búsqueda o el filtro aplicado."
-                        )
-                    }
-                }
-            } else {
-                items(filtradas, key = { it.id }) { devolucion ->
-                    TarjetaDevolucion(devolucion)
-                }
-            }
         }
     }
-}
-
-@Composable
-private fun ResumenItem(titulo: String, cantidad: Int) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = cantidad.toString(),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(text = titulo, style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HistorialPreview() {
-    Historial()
 }

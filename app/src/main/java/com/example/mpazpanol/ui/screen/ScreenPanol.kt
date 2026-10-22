@@ -103,6 +103,7 @@ fun ScreenPanol(onNavigateToLogin: () -> Unit)
                         .fillMaxWidth(0.7f)
                         .height(56.dp)
                         .shadow(8.dp, shape = CircleShape)
+
                 ) {
                     Text(
                         text="Ingresar",
